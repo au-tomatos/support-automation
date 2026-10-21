@@ -1,0 +1,808 @@
+{
+  "name": "Support Automation. PulseFit",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "492b6599-e9ee-4407-86b4-69e82d5cdc06",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"tickets\":[\n    {\n    \"ticket_id\": 10001,\n    \"created_at\": \"2026-08-01T10:00:00Z\",\n    \"updated_at\": \"2026-08-01T10:01:30Z\",\n    \"customer_email\": \"Anna.Test+trial@gmail.com\",\n    \"subject\": \"Please cancel\",\n    \"message\": \"Hi, I don't want to continue my subscription. Please cancel it.\",\n    \"product\": \"pulsefit\",\n    \"subscriptions\": [\n      {\n        \"id\": \"sub_test_001\",\n        \"product\": \"pulsefit\",\n        \"status\": \"active\",\n        \"billing_provider\": \"stripe\"\n      }\n    ]\n  },\n  {\n    \"ticket_id\": 10002,\n    \"created_at\": \"2026-08-01T11:00:00Z\",\n    \"updated_at\": \"2026-08-01T11:08:00Z\",\n    \"customer_email\": \"mark@example.com\",\n    \"subject\": \"Why was I charged?\",\n    \"message\": \"I was charged again today. Please explain this and cancel my subscription.\",\n    \"product\": \"pulsefit\",\n    \"subscriptions\": [\n      {\n        \"id\": \"sub_test_002\",\n        \"product\": \"pulsefit\",\n        \"status\": \"active\",\n        \"billing_provider\": \"paypal\"\n      }\n    ]\n  },\n  {\n    \"ticket_id\": 10003,\n    \"created_at\": \"2026-08-01T12:00:00Z\",\n    \"updated_at\": \"2026-08-01T12:02:00Z\",\n    \"customer_email\": \"sara@example.com\",\n    \"subject\": \"Refund\",\n    \"message\": \"I forgot to cancel and was charged yesterday. Can I get my money back?\",\n    \"product\": \"pulsefit\",\n    \"subscriptions\": [\n      {\n        \"id\": \"sub_test_003\",\n        \"product\": \"pulsefit\",\n        \"status\": \"active\",\n        \"billing_provider\": \"stripe\"\n      },\n      {\n        \"id\": \"sub_test_004\",\n        \"product\": \"pulsefit\",\n        \"status\": \"not_active\",\n        \"billing_provider\": \"stripe\"\n      },\n      {\n        \"id\": \"sub_test_007\",\n        \"product\": \"otherapp\",\n        \"status\": \"active\",\n        \"billing_provider\": \"stripe\"\n      }\n    ]\n  },\n  {\n    \"ticket_id\": 10004,\n    \"created_at\": \"2026-08-01T13:00:00Z\",\n    \"updated_at\": \"2026-08-01T13:00:30Z\",\n    \"customer_email\": \"tech.user@example.com\",\n    \"subject\": \"App issue\",\n    \"message\": \"The workout screen keeps freezing.\",\n    \"product\": \"pulsefit\",\n    \"subscriptions\": []\n  },\n  {\n    \"ticket_id\": 10005,\n    \"created_at\": \"2026-08-01T14:00:00Z\",\n    \"updated_at\": \"2026-08-01T14:03:00Z\",\n    \"customer_email\": \"broken@example.com\",\n    \"subject\": \"Help\",\n    \"message\": null,\n    \"product\": \"pulsefit\",\n    \"subscriptions\": []\n  },\n  {\n    \"ticket_id\": 10006,\n    \"created_at\": \"2026-08-01T15:00:00Z\",\n    \"updated_at\": \"2026-08-01T15:01:00Z\",\n    \"customer_email\": \"alex@example.com\",\n    \"subject\": \"Question about workouts\",\n    \"message\": \"How many workouts per week do you recommend?\",\n    \"product\": \"pulsefit\",\n    \"subscriptions\": []\n  }\n ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2513b243-094e-45fe-bcf6-73a11306ca80",
+      "name": "Sample Data"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tickets",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "da0b17d0-6a33-44f2-85ea-9a0806d5b098",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\nconst errors = [];\n\nif (!Number.isInteger(ticket.ticket_id) || ticket.ticket_id <= 0) {\n  errors.push(\"ticket_id must be a positive integer\");\n}\n\nif (typeof ticket.message !== \"string\" || !ticket.message.trim()) {\n  errors.push(\"message must be a non-empty string\");\n}\n\nif (typeof ticket.product !== \"string\" || !ticket.product.trim()) {\n  errors.push(\"product must be a non-empty string\");\n}\n\nreturn {\n  json: {\n    ...ticket,\n    is_valid: errors.length === 0,\n    error_message: errors.length > 0 ? errors.join(\"; \") : null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "81826074-8c21-489e-aec7-4e54d1dbbccf",
+      "name": "Validate ticket"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7f337516-0449-4a15-a537-3d10ffd2133b",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        0
+      ],
+      "id": "6e78a2b6-0dd1-4b80-880a-8c92febd9948",
+      "name": "IF ticket valid?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\nlet email = typeof ticket.customer_email === \"string\"\n  ? ticket.customer_email.trim().toLowerCase()\n  : \"\";\n\nif (email.endsWith(\"@gmail.com\")) {\n  const [username, domain] = email.split(\"@\");\n  email = username.split(\"+\")[0] + \"@\" + domain;\n}\n\nreturn {\n  json: {\n    ...ticket,\n    customer_email: email\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "b8c47e96-8212-420e-8ec8-c3ba819feb83",
+      "name": "Normalize email"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\n// Fixed test outputs that imitate an AI classifier.\nconst mockIntents = {\n  10001: \"cancellation\",\n  10002: \"cancellation_with_billing_clarification\",\n  10003: \"refund\",\n  10004: \"technical_issue\",\n  10006: \"other\"\n};\n\nconst intent = mockIntents[ticket.ticket_id] ?? null;\n\nreturn {\n  json: {\n    ...ticket,\n    intent,\n    confidence: intent !== null ? 0.95 : 0,\n    classification_mode: \"mock\",\n    classification_error: intent !== null\n      ? null\n      : \"No mock classification defined for this ticket\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "32cd4e83-a05d-425f-be9a-c0f55c1e572d",
+      "name": "Classify ticket(Mock Classifier)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "cancellation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1a7eb9fb-7b77-4a0a-a88f-778985446888"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancellation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "84ae40e5-2986-4d9b-9cd4-2423e3c8b799",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "cancellation_with_billing_clarification",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancellation with billing clarification"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4d8c4e0e-6dc4-4585-a084-a51b5e53a580",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "refund",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Refund"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a46c01f3-969c-44ce-b24d-4d8ea5e7a856",
+                    "leftValue": "={{$json.intent }}",
+                    "rightValue": "technical_issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Technical issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "90ecf753-621f-4163-b653-12b5b6e33aa9",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "other",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Other"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        -96
+      ],
+      "id": "eb06e43a-4eb9-4497-a040-0c5422d1c2cf",
+      "name": "Route ticket by intent"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\ntry {\n  const subscriptions = Array.isArray(ticket.subscriptions)\n    ? ticket.subscriptions\n    : [];\n\n  const matchingSubscriptions = subscriptions.filter(\n    sub => sub && sub.product === ticket.product\n  );\n\n  const activeSubscriptions = matchingSubscriptions.filter(\n    sub => sub.status === \"active\"\n  );\n\n  let actionStatus;\n  let reason = null;\n\n  if (activeSubscriptions.length === 1) {\n    actionStatus = \"simulated_success\";\n  } else if (activeSubscriptions.length === 0) {\n    actionStatus = \"not_executed\";\n    reason = \"No matching active subscription found\";\n  } else {\n    actionStatus = \"requires_review\";\n    reason = \"Multiple matching active subscriptions found\";\n  }\n\n  const selectedSubscription = activeSubscriptions.length === 1\n    ? activeSubscriptions[0]\n    : null;\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: matchingSubscriptions.length,\n      active_subscription_count: activeSubscriptions.length,\n      action_type: \"cancellation\",\n      action_status: actionStatus,\n      details: {\n        reason,\n        subscription_id: selectedSubscription?.id ?? null,\n        billing_provider:\n          selectedSubscription?.billing_provider ?? null,\n        billing_context: {\n          explanation_requested: true,\n          charge_reason_verified: false,\n          note: \"Charge history is unavailable. Do not invent a reason for the charge.\"\n        }\n      }\n    }\n  };\n\n} catch (error) {\n  const errorMessage = error instanceof Error\n    ? error.message\n    : String(error);\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: null,\n      action_type: \"cancellation\",\n      action_status: \"not_executed\",\n      execution_status: \"Failed\",\n      is_error: true,\n      error_stage: \"cancellation_with_billing_clarification\",\n      error_message: errorMessage,\n      customer_response: null,\n      details: {\n        reason: errorMessage,\n        manual_review_required: true\n      }\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        -192
+      ],
+      "id": "2a59fb7a-df52-41fd-95c1-ec830a5bfad4",
+      "name": "Cancellation+Billing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\ntry {\n  const subscriptions = Array.isArray(ticket.subscriptions)\n    ? ticket.subscriptions\n    : [];\n\n  const matchingSubscriptions = subscriptions.filter(\n    sub => sub && sub.product === ticket.product\n  );\n\n  const activeSubscriptions = matchingSubscriptions.filter(\n    sub => sub.status === \"active\"\n  );\n\n  let actionStatus;\n  let reason = null;\n\n  if (activeSubscriptions.length === 1) {\n    actionStatus = \"simulated_success\";\n  } else if (activeSubscriptions.length === 0) {\n    actionStatus = \"not_executed\";\n    reason = \"No matching active subscription found\";\n  } else {\n    actionStatus = \"requires_review\";\n    reason = \"Multiple matching active subscriptions found\";\n  }\n\n  const selectedSubscription = activeSubscriptions.length === 1\n    ? activeSubscriptions[0]\n    : null;\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: matchingSubscriptions.length,\n      active_subscription_count: activeSubscriptions.length,\n      action_type: \"cancellation\",\n      action_status: actionStatus,\n      details: {\n        reason,\n        subscription_id: selectedSubscription?.id ?? null,\n        billing_provider:\n          selectedSubscription?.billing_provider ?? null\n      }\n    }\n  };\n\n} catch (error) {\n  const errorMessage = error instanceof Error\n    ? error.message\n    : String(error);\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: null,\n      action_type: \"cancellation\",\n      action_status: \"not_executed\",\n      execution_status: \"Failed\",\n      is_error: true,\n      error_stage: \"cancellation\",\n      error_message: errorMessage,\n      customer_response: null,\n      details: {\n        reason: errorMessage,\n        manual_review_required: true\n      }\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        -336
+      ],
+      "id": "9e1f85f9-7a6a-4c8b-85af-e750dbc51b97",
+      "name": "Cancellation"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\ntry {\n  const subscriptions = Array.isArray(ticket.subscriptions)\n    ? ticket.subscriptions\n    : [];\n\n  const matchingSubscriptions = subscriptions.filter(\n    sub => sub && sub.product === ticket.product\n  );\n\n  const refundEligible = matchingSubscriptions.length > 0;\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: matchingSubscriptions.length,\n      action_type: \"refund\",\n      action_status: refundEligible\n        ? \"simulated_success\"\n        : \"not_executed\",\n      details: {\n        reason: refundEligible\n          ? null\n          : \"No matching subscription found\",\n        refund_eligible: refundEligible,\n        matching_subscription_ids: matchingSubscriptions.map(\n          sub => sub.id\n        )\n      }\n    }\n  };\n\n} catch (error) {\n  const errorMessage = error instanceof Error\n    ? error.message\n    : String(error);\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: null,\n      action_type: \"refund\",\n      action_status: \"not_executed\",\n      execution_status: \"Failed\",\n      is_error: true,\n      error_stage: \"refund\",\n      error_message: errorMessage,\n      customer_response: null,\n      details: {\n        reason: errorMessage,\n        manual_review_required: true\n      }\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        -48
+      ],
+      "id": "f5c25d3f-40b9-4368-b7b3-a855b69ceeb3",
+      "name": "Refund"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\ntry {\n  const subscriptions = Array.isArray(ticket.subscriptions)\n    ? ticket.subscriptions\n    : [];\n\n  const matchingSubscriptions = subscriptions.filter(\n    sub => sub && sub.product === ticket.product\n  );\n\n  const knowledgeBase = [\n    {\n      topic: \"freezing\",\n      response_context:\n        \"Ask the customer to update the app, restart the device, and retry.\"\n    },\n    {\n      topic: \"login\",\n      response_context:\n        \"Ask the customer to verify the account email and reset the password.\"\n    }\n  ];\n\n  const text = [\n    ticket.subject ?? \"\",\n    ticket.message ?? \"\"\n  ].join(\" \").toLowerCase();\n\n  const matchedTopics = [];\n\n  if (/\\b(freez\\w*|frozen)\\b/.test(text)) {\n    matchedTopics.push(\"freezing\");\n  }\n\n  if (/\\b(log\\s?in|sign\\s?in|password)\\b/.test(text)) {\n    matchedTopics.push(\"login\");\n  }\n\n  const matchedEntry = matchedTopics.length === 1\n    ? knowledgeBase.find(\n        entry => entry.topic === matchedTopics[0]\n      )\n    : null;\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: matchingSubscriptions.length,\n      action_type: \"technical_support\",\n      action_status: matchedEntry\n        ? \"not_executed\"\n        : \"requires_review\",\n      details: {\n        reason: matchedEntry\n          ? \"Troubleshooting guidance prepared; no system action performed\"\n          : matchedTopics.length > 1\n            ? \"Multiple knowledge base topics matched\"\n            : \"No matching knowledge base entry found\",\n        knowledge_base_topic: matchedEntry?.topic ?? null,\n        response_context: matchedEntry?.response_context ?? null,\n        manual_review_required: !matchedEntry\n      }\n    }\n  };\n\n} catch (error) {\n  const errorMessage = error instanceof Error\n    ? error.message\n    : String(error);\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: null,\n      action_type: \"technical_support\",\n      action_status: \"not_executed\",\n      execution_status: \"Failed\",\n      is_error: true,\n      error_stage: \"technical_issue\",\n      error_message: errorMessage,\n      customer_response: null,\n      details: {\n        reason: errorMessage,\n        manual_review_required: true\n      }\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        96
+      ],
+      "id": "011f0c0d-5e7d-4590-a176-0d5970282932",
+      "name": "Technical issue"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\ntry {\n  const subscriptions = Array.isArray(ticket.subscriptions)\n    ? ticket.subscriptions\n    : [];\n\n  const matchingSubscriptions = subscriptions.filter(\n    sub => sub && sub.product === ticket.product\n  );\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: matchingSubscriptions.length,\n      action_type: \"manual_review\",\n      action_status: \"requires_review\",\n      details: {\n        reason: \"Request requires manual review by general support\",\n        support_queue: \"general_support\",\n        manual_review_required: true,\n        response_context:\n          \"Acknowledge the request and explain that it needs review by the support team. Do not claim that any billing or subscription action was performed.\"\n      }\n    }\n  };\n\n} catch (error) {\n  const errorMessage = error instanceof Error\n    ? error.message\n    : String(error);\n\n  return {\n    json: {\n      ...ticket,\n      matching_subscription_count: null,\n      action_type: \"manual_review\",\n      action_status: \"not_executed\",\n      execution_status: \"Failed\",\n      is_error: true,\n      error_stage: \"other\",\n      error_message: errorMessage,\n      customer_response: null,\n      details: {\n        reason: errorMessage,\n        manual_review_required: true\n      }\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        240
+      ],
+      "id": "9e32c97e-0a1f-4e1e-afa8-dead4b2b5e20",
+      "name": "other"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\nconst validationFailed = ticket.is_valid === false;\n\nconst errorStage = validationFailed\n  ? \"input_validation\"\n  : \"classification\";\n\nconst errorMessage = validationFailed\n  ? ticket.error_message || \"Ticket validation failed\"\n  : ticket.classification_error || \"Unknown or missing intent\";\n\nreturn {\n  json: {\n    ...ticket,\n    intent: ticket.intent ?? null,\n    matching_subscription_count: null,\n    action_type: \"none\",\n    action_status: \"not_executed\",\n    execution_status: \"Failed\",\n    is_error: true,\n    error_stage: errorStage,\n    error_message: errorMessage,\n    customer_response: null,\n    details: {\n      reason: errorMessage,\n      manual_review_required: true\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        80
+      ],
+      "id": "d07538e1-6c11-4109-818d-f6429329881e",
+      "name": "Prepare error results"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\nreturn {\n  json: {\n    ...ticket,\n    detected_intent: ticket.intent ?? null,\n    matching_subscription_count:\n      ticket.matching_subscription_count ?? null,\n    action_type: ticket.action_type ?? \"none\",\n    action_status: ticket.action_status ?? \"not_executed\",\n    is_error: ticket.is_error === true,\n    error_message: ticket.error_message ?? null,\n    details: ticket.details ?? {\n      reason: null\n    },\n    customer_response: ticket.customer_response ?? null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        -48
+      ],
+      "id": "1e2dcff4-4d23-49a8-a2fd-ce2bf9fd99cb",
+      "name": "Standardize Result"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\n// Invalid tickets go to logging without a customer reply.\nif (ticket.is_error === true) {\n  return {\n    json: {\n      ...ticket,\n      customer_response: null,\n      response_mode: \"mock\",\n      response_generation_status: \"skipped\"\n    }\n  };\n}\n\nlet subject = \"Your PulseFit request\";\nlet message =\n  \"Hi, thanks for reaching out. Your request needs review by our support team.\";\n\nif (ticket.action_type === \"cancellation\") {\n  subject = \"Your cancellation request\";\n\n  if (ticket.action_status === \"simulated_success\") {\n    message =\n      \"Hi, your PulseFit subscription has been cancelled.\";\n\n    if (ticket.intent === \"cancellation_with_billing_clarification\") {\n      message +=\n        \" A support specialist will need to check your payment history to explain the charge.\";\n    }\n  } else if (ticket.action_status === \"requires_review\") {\n    message =\n      \"Hi, we need to review your subscriptions before completing the cancellation. No subscription has been cancelled yet.\";\n  } else {\n    message =\n      \"Hi, we couldn't find an active PulseFit subscription to cancel. Please confirm the email used for your subscription.\";\n  }\n}\n\nif (ticket.action_type === \"refund\") {\n  subject = \"Your refund request\";\n\n  if (ticket.action_status === \"simulated_success\") {\n    message =\n      \"Hi, your refund has been processed.\";\n  } else {\n    message =\n      \"Hi, we couldn't process your refund because we couldn't find a matching PulseFit subscription. Please confirm the email used for your subscription.\";\n  }\n}\n\nif (ticket.action_type === \"technical_support\") {\n  subject = \"Help with your PulseFit app\";\n\n  const topic = ticket.details?.knowledge_base_topic;\n  const needsReview = ticket.details?.manual_review_required;\n\n  if (needsReview === false && topic === \"freezing\") {\n    message =\n      \"Hi, please update the PulseFit app, restart your device, and try again.\";\n  } else if (needsReview === false && topic === \"login\") {\n    message =\n      \"Hi, please check that you're using the email associated with your account and reset your password.\";\n  } else {\n    message =\n      \"Hi, your technical issue needs further review by our support team.\";\n  }\n}\n\nreturn {\n  json: {\n    ...ticket,\n    customer_response: {\n      subject,\n      message\n    },\n    response_mode: \"mock\",\n    response_generation_status: \"generated\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        -48
+      ],
+      "id": "e877d601-4785-45f6-be6d-54a3f33fb3ad",
+      "name": "Generate Mock Response"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\n// Preserve earlier errors and skip response validation.\nif (ticket.is_error === true) {\n  return {\n    json: {\n      ...ticket,\n      execution_status: \"Failed\",\n      customer_response: null,\n      final_validation_status: \"skipped\"\n    }\n  };\n}\n\nconst errors = [];\n\nconst allowedIntents = [\n  \"cancellation\",\n  \"cancellation_with_billing_clarification\",\n  \"refund\",\n  \"technical_issue\",\n  \"other\"\n];\n\nconst allowedStatuses = [\n  \"simulated_success\",\n  \"not_executed\",\n  \"requires_review\",\n  \"queued\"\n];\n\nif (!allowedIntents.includes(ticket.detected_intent)) {\n  errors.push(\"Invalid detected intent\");\n}\n\nif (\n  !Number.isInteger(ticket.matching_subscription_count) ||\n  ticket.matching_subscription_count < 0\n) {\n  errors.push(\"Invalid matching subscription count\");\n}\n\nif (!allowedStatuses.includes(ticket.action_status)) {\n  errors.push(\"Invalid action status\");\n}\n\nconst response = ticket.customer_response;\n\nif (\n  typeof response?.subject !== \"string\" ||\n  !response.subject.trim() ||\n  typeof response?.message !== \"string\" ||\n  !response.message.trim()\n) {\n  errors.push(\"Customer response must contain a subject and message\");\n}\n\n// Check that simulated success satisfies the business rule.\nif (ticket.action_status === \"simulated_success\") {\n  if (ticket.action_type === \"cancellation\") {\n    if (ticket.active_subscription_count !== 1) {\n      errors.push(\"Cancellation success requires exactly one active subscription\");\n    }\n  } else if (ticket.action_type === \"refund\") {\n    if (!(ticket.matching_subscription_count > 0)) {\n      errors.push(\"Refund success requires a matching subscription\");\n    }\n  } else {\n    errors.push(\"Unexpected action type for simulated success\");\n  }\n}\n\n// Catch success claims used by our mock response templates.\nconst successClaim =\n  /your (pulsefit subscription has been cancelled|refund has been processed)/i;\n\nif (\n  successClaim.test(response?.message ?? \"\") &&\n  ticket.action_status !== \"simulated_success\"\n) {\n  errors.push(\"Response claims success without a successful action\");\n}\n\nconst passed = errors.length === 0;\n\nreturn {\n  json: {\n    ...ticket,\n    execution_status: passed ? \"Success\" : \"Failed\",\n    is_error: !passed,\n    error_stage: passed ? null : \"final_validation\",\n    error_message: passed ? null : errors.join(\"; \"),\n    final_validation_status: passed ? \"passed\" : \"failed\",\n    final_validation_errors: errors,\n    customer_response: passed ? response : null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        -48
+      ],
+      "id": "b84e7f02-f0e6-4c27-92f3-86e06c1cd646",
+      "name": "Validate response"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = $json;\n\nreturn {\n  json: {\n    timestamp: new Date().toISOString(),\n    execution_id: String($execution.id),\n    ticket_id: ticket.ticket_id ?? null,\n    detected_intent: ticket.detected_intent ?? null,\n    matching_subscription_count:\n      ticket.matching_subscription_count ?? null,\n    action_type: ticket.action_type,\n    action_status: ticket.action_status,\n    execution_status: ticket.execution_status,\n    error_message: ticket.error_message ?? null,\n    response_subject: ticket.customer_response?.subject ?? null,\n    response_message: ticket.customer_response?.message ?? null,\n    final_validation_status: ticket.final_validation_status\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3088,
+        -48
+      ],
+      "id": "15bac2f2-327c-42d8-aa2b-9910b2134a3b",
+      "name": "Prepare Log Entry"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "SS1N0dG1Svs2rKQ7",
+          "mode": "list",
+          "cachedResultName": "Support Automation Logs",
+          "cachedResultUrl": "/projects/5ho0RKojvWwvSaMj/datatables/SS1N0dG1Svs2rKQ7"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "execution_ID",
+              "displayName": "execution_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ticket_ID",
+              "displayName": "ticket_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "detected_intent",
+              "displayName": "detected_intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "matching_subscription_count",
+              "displayName": "matching_subscription_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "action_status",
+              "displayName": "action_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "execution_status",
+              "displayName": "execution_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "response_subject",
+              "displayName": "response_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "response_message",
+              "displayName": "response_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "final_validation_status",
+              "displayName": "final_validation_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3312,
+        -48
+      ],
+      "id": "e908bebb-c666-4fb9-8fb7-7b83a8e94c6e",
+      "name": "Save Execution Log"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Sample Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Data": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Validate ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate ticket": {
+      "main": [
+        [
+          {
+            "node": "IF ticket valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ticket valid?": {
+      "main": [
+        [
+          {
+            "node": "Normalize email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare error results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize email": {
+      "main": [
+        [
+          {
+            "node": "Classify ticket(Mock Classifier)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify ticket(Mock Classifier)": {
+      "main": [
+        [
+          {
+            "node": "Route ticket by intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route ticket by intent": {
+      "main": [
+        [
+          {
+            "node": "Cancellation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancellation+Billing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refund",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Technical issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "other",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare error results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancellation": {
+      "main": [
+        [
+          {
+            "node": "Standardize Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancellation+Billing": {
+      "main": [
+        [
+          {
+            "node": "Standardize Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refund": {
+      "main": [
+        [
+          {
+            "node": "Standardize Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technical issue": {
+      "main": [
+        [
+          {
+            "node": "Standardize Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "other": {
+      "main": [
+        [
+          {
+            "node": "Standardize Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare error results": {
+      "main": [
+        [
+          {
+            "node": "Standardize Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Standardize Result": {
+      "main": [
+        [
+          {
+            "node": "Generate Mock Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Mock Response": {
+      "main": [
+        [
+          {
+            "node": "Validate response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate response": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log Entry": {
+      "main": [
+        [
+          {
+            "node": "Save Execution Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "305cf25a-0369-4630-b91b-af55e6f3214d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "eade8b9dffadee90891f3c2f0c033c7c140267a458ec5243a1751fd6a3b8f5dc"
+  },
+  "nodeGroups": [],
+  "id": "gZfGlYkBzg09WQGE",
+  "tags": []
+}
